@@ -1,5 +1,5 @@
 /*
- * Designed and developed by 2019 skydoves (Jaewoong Eum)
+ * Designed and developed by 2019-2023 skydoves (Jaewoong Eum)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,77 @@
 
 package com.skydoves.whatifdemo
 
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.skydoves.balloon.Balloon
-import com.skydoves.balloon.BalloonAnimation
-import com.skydoves.balloon.showAlignTop
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.skydoves.whatif.whatIf
 import com.skydoves.whatif.whatIfMap
 import com.skydoves.whatif.whatIfNotNull
-import com.skydoves.whatifdemo.databinding.ActivityMainBinding
+import com.skydoves.whatifdemo.theme.WhatIfTheme
+import com.skydoves.whatifdemo.theme.background
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
+    whatIfExamples()
 
+    setContent {
+      WhatIfTheme {
+        var isBlueColor by remember { mutableStateOf(false) }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+          Box(
+            modifier = Modifier
+              .align(Alignment.Center)
+              .clickable { isBlueColor = !isBlueColor }
+              .whatIfMap(
+                isBlueColor,
+                { it.background(Color.Blue) },
+                { it.background(Color.Cyan) },
+              )
+              .whatIfMap(isBlueColor, { it.size(120.dp) }, { it.size(240.dp) }),
+          )
+
+          Box(modifier = Modifier.align(Alignment.Center)) {
+            whatIf(
+              given = isBlueColor,
+              whatIf = {
+                Text(
+                  text = "isBlueColor=$isBlueColor",
+                  color = Color.White,
+                )
+              },
+              whatIfNot = {
+                Text(
+                  text = "isBlueColor=$isBlueColor",
+                  color = Color.Red,
+                )
+              },
+            )
+          }
+        }
+      }
+    }
+  }
+
+  private fun whatIfExamples() {
     val nullableBoolean: Boolean? = true
     var nullableString: String? = null
 
@@ -53,7 +103,7 @@ class MainActivity : AppCompatActivity() {
     // example2 : nullable Boolean true-false check extension with whatIfNot
     nullableBoolean.whatIf(
       whatIf = { log("not-null and true : $nullableBoolean") },
-      whatIfNot = { log("null or false : $nullableBoolean") }
+      whatIfNot = { log("null or false : $nullableBoolean") },
     )
 
     // example3 : nullable String true-false check extension with default value.
@@ -78,27 +128,8 @@ class MainActivity : AppCompatActivity() {
       whatIfNot = {
         log("$it is short.")
         "short"
-      }
+      },
     )
-
-    // example6 : what-if check in the builder pattern.
-    val balloon = Balloon.Builder(this)
-      .setArrowSize(10)
-      .whatIf(nullableBoolean) { setTextColor(Color.YELLOW) }
-      .whatIf(nullableBoolean, { setText("Hello, whatIf") }, { setText("Good-Bye whatIf") })
-      .setWidthRatio(1.0f)
-      .setMargin(12)
-      .setPadding(12)
-      .setTextSize(15f)
-      .setArrowPosition(0.5f)
-      .setCornerRadius(4f)
-      .setAlpha(0.9f)
-      .setBackgroundColor(ContextCompat.getColor(baseContext, R.color.colorPrimary))
-      .setBalloonAnimation(BalloonAnimation.FADE)
-      .setLifecycleOwner(this@MainActivity)
-      .build()
-
-    binding.button.showAlignTop(balloon)
   }
 
   private fun log(log: String) {
